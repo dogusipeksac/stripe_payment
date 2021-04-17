@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_credit_card/credit_card_widget.dart';
+import 'package:stripe_payment/stripe_payment.dart';
 import 'package:stripe_payment_flutter_app/service/payment-service.dart';
-
+import 'package:progress_dialog/progress_dialog.dart';
 
 
 class ExistingCardPage extends StatefulWidget {
@@ -13,20 +14,34 @@ class ExistingCardPage extends StatefulWidget {
 class _ExistingCardPageState extends State<ExistingCardPage> {
 
   List cards = [{
-    'cardNumber': '4242424242424242',
+    'cardNumber': '5555555555554444',
     'expiryDate': '04/24',
     'cardHolderName': 'Dogus Ipeksaç',
     'cvvCode': '424',
     'showBackView': false,
   }];
 
-  payViaExistingCard(BuildContext context,card){
-    var response=StripeService.payViaExistingCard(
-        amount: '150',
-        currency: 'USD',
-        card: card,
+  payViaExistingCard(BuildContext context,card)async{
+    ProgressDialog progressDialog=new ProgressDialog(context);
+    progressDialog.style(
+      message: 'Please wait..'
     );
-    if(response.success==true) {
+    await progressDialog.show();
+    var expiryArr=card['expiryDate'].split('/');
+    CreditCard stripeCard=new CreditCard(
+      number: card['cardNumber'],
+      expMonth:int.parse(expiryArr[0]),
+      expYear:int.parse(expiryArr[1]),
+    );
+
+    var response=await StripeService.payViaExistingCard(
+        amount: '250000',
+        currency: 'USD',
+        card: stripeCard,
+    );
+    await progressDialog.hide();
+
+      // ignore: deprecated_member_use
       Scaffold.of(context).showSnackBar(
         SnackBar(
           content: Text(response.message),
@@ -36,7 +51,7 @@ class _ExistingCardPageState extends State<ExistingCardPage> {
       ).closed.then((_){
         Navigator.pop(context);
       });
-    }
+
 
   }
 

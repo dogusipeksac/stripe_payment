@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:progress_dialog/progress_dialog.dart';
 import 'package:stripe_payment_flutter_app/service/payment-service.dart';
 
 
@@ -15,20 +16,7 @@ class _HomePageState extends State<HomePage> {
   onItemPress(BuildContext context,int index) async{
     switch(index){
       case 0:
-        //pay via new card
-      var response=await StripeService.payWithNewCard(
-        amount: '150',
-        currency: 'USD'
-      );
-      if(response.success==true){
-        // ignore: deprecated_member_use
-        Scaffold.of(context).showSnackBar(
-            SnackBar(
-              content: Text(response.message),
-              duration: new Duration(milliseconds: 1200),
-            ),
-        );
-      }
+        payViaNewCard();
         break;
       case 1:
         //pay via card
@@ -43,7 +31,30 @@ class _HomePageState extends State<HomePage> {
     StripeService.init();
 
   }
+ payViaNewCard() async{
+   ProgressDialog progressDialog=new ProgressDialog(context);
+   progressDialog.style(
+       message: 'Please wait..'
+   );
+   await progressDialog.show();
+   //pay via new card
+   var response=await StripeService.payWithNewCard(
+       amount: '600',
+       currency: 'USD'
+   );
+   await progressDialog.hide();
+     // ignore: deprecated_member_use
+     Scaffold.of(this.context).showSnackBar(
+       SnackBar(
+         content: Text(response.message),
+         duration: new Duration(
+             milliseconds: response.success == true ? 1200 : 3000),
+       ),
+     );
 
+
+
+ }
   @override
   Widget build(BuildContext context) {
     ThemeData themeData=Theme.of(context);
